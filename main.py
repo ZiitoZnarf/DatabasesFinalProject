@@ -1,7 +1,7 @@
-import sqlite3, dbSearch, orderManager
+import sqlite3#, dbSearch, orderManager, profileManager
 
 
-database = "database.db"
+database = "ClothingStore.db"
 employee_domain = "superclothing.com"
 
 def main():
@@ -44,7 +44,7 @@ def main():
             elif valid == 2:
                 employee_options(conn, email)
 
-            inp_login = input("Would you like to Register (R), Login (L), or Quit (Q): ")
+            inp_login = input("\nWould you like to Register (R), Login (L), or Quit (Q): ")
 
         #REGISTER
         elif inp_login.lower() == "r":
@@ -89,7 +89,7 @@ def main():
                 add_profile(conn, new_email, inp_password, inp_fname, inp_lname)
                 print("\nProfile Registered Successfully")
 
-            inp_login = input("Would you like to Register (R), Login (L), or Quit (Q): ")
+            inp_login = input("\nWould you like to Register (R), Login (L), or Quit (Q): ")
 
         #QUIT
         elif inp_login.lower() == "q":
@@ -108,7 +108,7 @@ def login_valid(conn, inp_email, inp_password):
     #Check login validity
     curs = conn.cursor()
     query = "SELECT * FROM PROFILE WHERE Email = ? AND Password = ?"
-    curs.execute(query, (f"%{inp_email}%", f"%{inp_password}%"))
+    curs.execute(query, (f"{inp_email}", f"{inp_password}"))
     result = curs.fetchone()
 
     #if the login information is not legitimate
@@ -121,10 +121,11 @@ def login_valid(conn, inp_email, inp_password):
     else:
         return 1
 
+
 def email_valid(conn, inp_email):
     curs = conn.cursor()
     query = "SELECT * FROM PROFILE WHERE Email = ?"
-    curs.execute(query, f"%{inp_email}%")
+    curs.execute(query, (f"{inp_email}",))
     result = curs.fetchone()
 
     #Email already registered
@@ -154,19 +155,19 @@ def add_profile(conn, inp_email, inp_password, inp_fname, inp_lname):
 def customer_options(conn, cust_email):
     logged_out = False
 
-    print("==Customer Actions==\n")
+    print("\n==Customer Actions==\n")
     inp_selection = input("Would you like to Search Items (S), View Cart (C), View Profile (P), or logout (Q): ")
 
     while not logged_out:
         if inp_selection.lower() == 's':
             option_search(conn, cust_email)
-            inp_selection = input("Would you like to Search Items (S), View Cart (C), View Profile (P), or logout (Q): ")
+            inp_selection = input("\nWould you like to Search Items (S), View Cart (C), View Profile (P), or logout (Q): ")
         elif inp_selection.lower() == 'c':
             option_cart(conn, cust_email)
-            inp_selection = input("Would you like to Search Items (S), View Cart (C), View Profile (P), or logout (Q): ")
+            inp_selection = input("\nWould you like to Search Items (S), View Cart (C), View Profile (P), or logout (Q): ")
         elif inp_selection.lower() == 'p':
             option_profile(conn, cust_email)
-            inp_selection = input("Would you like to Search Items (S), View Cart (C), View Profile (P), or logout (Q): ")
+            inp_selection = input("\nWould you like to Search Items (S), View Cart (C), View Profile (P), or logout (Q): ")
         elif inp_selection.lower() == 'q':
             logged_out = True
         else:
@@ -180,16 +181,16 @@ def customer_options(conn, cust_email):
 def employee_options(conn, emp_email):
     logged_out = False
 
-    print("==Employee Actions==\n")
+    print("\n==Employee Actions==\n")
     inp_selection = input("Would you like to Search Items (S), View Profile (P), or logout (Q): ")
 
     while not logged_out:
         if inp_selection.lower() == 's':
             option_search(conn, emp_email)
-            inp_selection = input("Would you like to Search Items (S), View Profile (P), or logout (Q): ")
+            inp_selection = input("\nWould you like to Search Items (S), View Profile (P), or logout (Q): ")
         elif inp_selection.lower() == 'p':
             option_profile(conn, emp_email)
-            inp_selection = input("Would you like to Search Items (S), View Profile (P), or logout (Q): ")
+            inp_selection = input("\nWould you like to Search Items (S), View Profile (P), or logout (Q): ")
         elif inp_selection.lower() == 'q':
             logged_out = True
         else:
@@ -201,8 +202,8 @@ def option_search(conn, email):
     has_quit = False
 
     while not has_quit:
-        filters = dbSearch.getFilters(database)
-        dbSearch.search(filters)
+        #filters = dbSearch.getFilters(database)
+        #dbSearch.search(filters)
         is_selecting = True
 
         print("Type an item's \"UniqueID\" to add it to cart.")
@@ -227,7 +228,7 @@ def option_search(conn, email):
                 while (not inp_quantity.isdigit()) or (int(inp_quantity) < 1):
                     inp_quantity = input("Please enter item quantity (Must be a positive integer): ")
 
-                dbSearch.addItem(inp_id, inp_quantity)
+                #dbSearch.addItem(inp_id, inp_quantity)
 
                 print("Type an item's \"UniqueID\" to add it to cart.")
                 inp_selection = input("You can also Change Search Filters (S) or Return to Menu (Q): ")
@@ -235,24 +236,69 @@ def option_search(conn, email):
 
 def option_cart(conn, email):
     has_quit = False
-
-    while not has_quit:
-        orderManager.viewCart(email)
-        inp_selection = input("Please enter an input or Return to Menu (Q): ")
-
-
-        if inp_selection.lower == "q":
-            has_quit = True
+    #orderManager.viewCart(email)
 
 
 
 
 def option_profile(conn, email):
-    return
+    logged_out = False
+
+    print("\n==Your Profile==\n")
+    displayProfileInfo(conn, email)
+
+    inp_selection = input("\nWould you like to View Past Orders (O) or Change Name (N), CC-Number (C), \n"
+                          "Shipping Address (A), or Password (P), or logout (Q): ")
+
+    while not logged_out:
+        if inp_selection.lower() == 'o':
+            #profileManager.viewOrders(email)
+            inp_selection = input("\nWould you like to View Past Orders (O) or Change Name (N), CC-Number (C), \n"
+                          "Shipping Address (A), or Password (P), or logout (Q): ")
+        elif inp_selection.lower() == 'n':
+            #profileManager.changeName(email)
+            inp_selection = input("\nWould you like to View Past Orders (O) or Change Name (N), CC-Number (C), \n"
+                                  "Shipping Address (A), or Password (P), or logout (Q): ")
+        elif inp_selection.lower() == 'c':
+            #profileManager.changeCCInfo(email)
+            inp_selection = input("\nWould you like to View Past Orders (O) or Change Name (N), CC-Number (C), \n"
+                                  "Shipping Address (A), or Password (P), or logout (Q): ")
+        elif inp_selection.lower() == 'a':
+            #profileManager.changeAddress(email)
+            inp_selection = input("\nWould you like to View Past Orders (O) or Change Name (N), CC-Number (C), \n"
+                                  "Shipping Address (A), or Password (P), or logout (Q): ")
+        elif inp_selection.lower() == 'p':
+            #profileManager.changePassword(email)
+            inp_selection = input("\nWould you like to View Past Orders (O) or Change Name (N), CC-Number (C), \n"
+                                  "Shipping Address (A), or Password (P), or logout (Q): ")
+        elif inp_selection.lower() == 'q':
+            logged_out = True
+        else:
+            print ("\nSelection not Recognized, please enter one of the following options:")
+            inp_selection = input("View Past Orders (O) or Change Name (N), CC-Number (C), \n"
+                                  "Shipping Address (A), or Password (P), or logout (Q): ")
+
+def displayProfileInfo(conn, email):
+    curs = conn.cursor()
+
+    query = "SELECT * FROM PROFILE WHERE Email = ?"
+    curs.execute(query, (f"{email}",))
+
+
+    tup = curs.fetchone()
+    results = []
+    for item in tup:
+        results.append(item)
+
+    print("Email: " + str(results[0]))
+    print("Name: " + str(results[2]) + " " + str(results[3]))
+    print("CC-Number: " + str(results[4]))
+    print("Shipping Address: " + str(results[5]))
+
+
 
 def get_connection():
     conn = sqlite3.connect(database)
-    conn.row_factory = sqlite3.Row
     return conn
 
 
