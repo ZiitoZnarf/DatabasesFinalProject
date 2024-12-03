@@ -128,6 +128,41 @@ def insert_sample_data(cursor):
         ('CL005', 'LeBron Witness 8', 'Shoe', 'High-top', '11.5', 'Nike', 25, 110.00, False, True, False)
     ])
 
+    cursor.executemany('''
+    INSERT OR IGNORE INTO HOLDS (OrderNum, ClothUniID, Quantity)
+    VALUES (?, ?, ?);
+    ''', [
+        ('ORDER001', 'CL001', 2),
+        ('ORDER002', 'CL002', 1),
+        ('ORDER003', 'CL003', 4),
+        ('ORDER004', 'CL004', 3)
+    ])
+
+    cursor.executemany('''
+    INSERT OR IGNORE INTO COLOR (ClothUniID, Color)
+    VALUES (?, ?);
+    ''', [
+        ('CL001', 'White'),
+        ('CL002', 'Black'),
+        ('CL003', 'Red'),
+        ('CL003', 'Black'),
+        ('CL004', 'White'),
+        ('CL004', 'Red'),
+        ('CL005', 'White'),
+        ('CL005', 'Orange')
+    ])
+
+    cursor.executemany('''
+    INSERT OR IGNORE INTO MATERIAL (ClothUniID, Material)
+    VALUES (?, ?);
+    ''', [
+        ('CL001', 'Rubber'),
+        ('CL002', 'Leather'),
+        ('CL003', 'Polyester'),
+        ('CL004', 'Polyester'),
+        ('CL005', 'Fabric')
+    ])
+
 def print_all_data():
     """Prints all data from all tables in the database."""
     conn = connect_db()
