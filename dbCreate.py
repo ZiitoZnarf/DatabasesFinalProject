@@ -3,7 +3,7 @@ import sqlite3
 # Global constant for database name
 DB_NAME = 'ClothingStore.db'
 
-def connect_db(DB_NAME):
+def connect_db():
     """Establishes a connection to the SQLite database."""
     conn = sqlite3.connect(DB_NAME)
     conn.execute("PRAGMA foreign_keys = ON;")
@@ -128,6 +128,21 @@ def insert_sample_data(cursor):
         ('CL005', 'LeBron Witness 8', 'Shoe', 'High-top', '11.5', 'Nike', 25, 110.00, False, True, False)
     ])
 
+def print_all_data():
+    """Prints all data from all tables in the database."""
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    tables = ["PROFILE", "CUSTOMER_ORDER", "CLOTHING", "HOLDS", "COLOR", "MATERIAL"]
+
+    for table in tables:
+        print(f"\nContents of {table}:")
+        rows = cursor.execute(f"SELECT * FROM {table};").fetchall()
+        for row in rows:
+            print(row)
+
+    conn.close()
+
 def reset_db():
     """Drops all tables in the database (useful for testing)."""
     conn = connect_db()
@@ -141,3 +156,4 @@ def reset_db():
 
 if __name__ == "__main__":
     initialize_db()
+    print_all_data()
