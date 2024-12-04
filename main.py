@@ -159,6 +159,7 @@ def customer_options(conn, cust_email):
     inp_selection = input("Would you like to Search Items (S), View Cart (C), View Profile (P), or logout (Q): ")
 
     while not logged_out:
+        getCartOrderID(conn, cust_email)
         if inp_selection.lower() == 's':
             option_search(conn, cust_email)
             inp_selection = input("\nWould you like to Search Items (S), View Cart (C), View Profile (P), or logout (Q): ")
@@ -200,10 +201,14 @@ def employee_options(conn, emp_email):
 
 def option_search(conn, email):
     has_quit = False
+    isEmployee = False
+    if email.count("@" + employee_domain) == 1:
+        isEmployee = True
 
-    while not has_quit:
-        #filters = dbSearch.getFilters(database)
-        #dbSearch.search(filters)
+    ###while not has_quit:
+    #filters = dbSearch.getFilters(database)
+    #dbSearch.search(filters)
+        '''''''''
         is_selecting = True
 
         print("Type an item's \"UniqueID\" to add it to cart.")
@@ -232,13 +237,12 @@ def option_search(conn, email):
 
                 print("Type an item's \"UniqueID\" to add it to cart.")
                 inp_selection = input("You can also Change Search Filters (S) or Return to Menu (Q): ")
+        '''''''''
 
 
 def option_cart(conn, email):
     has_quit = False
     #orderManager.viewCart(email)
-
-
 
 
 def option_profile(conn, email):
@@ -247,36 +251,58 @@ def option_profile(conn, email):
     print("\n==Your Profile==\n")
     displayProfileInfo(conn, email)
 
-    inp_selection = input("\nWould you like to View Past Orders (O) or Change Name (N), CC-Number (C), \n"
-                          "Shipping Address (A), or Password (P), or logout (Q): ")
+    if email.count("@" + employee_domain) == 1:
+        inp_selection = input("\nWould you like to Change Name (N) or Password (P) or logout (Q): ")
+    else:
+        inp_selection = input("\nWould you like to View Past Orders (O) or Change Name (N), CC-Number (C), \n"
+                              "Shipping Address (A), or Password (P), or logout (Q): ")
 
     while not logged_out:
-        if inp_selection.lower() == 'o':
+        if inp_selection.lower() == 'o' and email.count("@" + employee_domain) == 0:
             #profileManager.viewOrders(email)
-            inp_selection = input("\nWould you like to View Past Orders (O) or Change Name (N), CC-Number (C), \n"
-                          "Shipping Address (A), or Password (P), or logout (Q): ")
+            if email.count("@" + employee_domain) == 1:
+                inp_selection = input("\nWould you like to Change Name (N) or Password (P) or logout (Q): ")
+            else:
+                inp_selection = input("\nWould you like to View Past Orders (O) or Change Name (N), CC-Number (C), \n"
+                                      "Shipping Address (A), or Password (P), or logout (Q): ")
         elif inp_selection.lower() == 'n':
             #profileManager.changeName(email)
-            inp_selection = input("\nWould you like to View Past Orders (O) or Change Name (N), CC-Number (C), \n"
-                                  "Shipping Address (A), or Password (P), or logout (Q): ")
-        elif inp_selection.lower() == 'c':
+            if email.count("@" + employee_domain) == 1:
+                inp_selection = input("\nWould you like to Change Name (N) or Password (P) or logout (Q): ")
+            else:
+                inp_selection = input("\nWould you like to View Past Orders (O) or Change Name (N), CC-Number (C), \n"
+                                      "Shipping Address (A), or Password (P), or logout (Q): ")
+        elif inp_selection.lower() == 'c' and email.count("@" + employee_domain) == 0:
             #profileManager.changeCCInfo(email)
-            inp_selection = input("\nWould you like to View Past Orders (O) or Change Name (N), CC-Number (C), \n"
-                                  "Shipping Address (A), or Password (P), or logout (Q): ")
-        elif inp_selection.lower() == 'a':
+            if email.count("@" + employee_domain) == 1:
+                inp_selection = input("\nWould you like to Change Name (N) or Password (P) or logout (Q): ")
+            else:
+                inp_selection = input("\nWould you like to View Past Orders (O) or Change Name (N), CC-Number (C), \n"
+                                      "Shipping Address (A), or Password (P), or logout (Q): ")
+        elif inp_selection.lower() == 'a' and email.count("@" + employee_domain) == 0:
             #profileManager.changeAddress(email)
-            inp_selection = input("\nWould you like to View Past Orders (O) or Change Name (N), CC-Number (C), \n"
-                                  "Shipping Address (A), or Password (P), or logout (Q): ")
+            if email.count("@" + employee_domain) == 1:
+                inp_selection = input("\nWould you like to Change Name (N) or Password (P) or logout (Q): ")
+            else:
+                inp_selection = input("\nWould you like to View Past Orders (O) or Change Name (N), CC-Number (C), \n"
+                                      "Shipping Address (A), or Password (P), or logout (Q): ")
         elif inp_selection.lower() == 'p':
             #profileManager.changePassword(email)
-            inp_selection = input("\nWould you like to View Past Orders (O) or Change Name (N), CC-Number (C), \n"
-                                  "Shipping Address (A), or Password (P), or logout (Q): ")
+            if email.count("@" + employee_domain) == 1:
+                inp_selection = input("\nWould you like to Change Name (N) or Password (P) or logout (Q): ")
+            else:
+                inp_selection = input("\nWould you like to View Past Orders (O) or Change Name (N), CC-Number (C), \n"
+                                      "Shipping Address (A), or Password (P), or logout (Q): ")
         elif inp_selection.lower() == 'q':
             logged_out = True
         else:
             print ("\nSelection not Recognized, please enter one of the following options:")
-            inp_selection = input("View Past Orders (O) or Change Name (N), CC-Number (C), \n"
-                                  "Shipping Address (A), or Password (P), or logout (Q): ")
+
+            if email.count("@" + employee_domain) == 1:
+                inp_selection = input("Change Name (N) or Password (P) or logout (Q): ")
+            else:
+                inp_selection = input("View Past Orders (O) or Change Name (N), CC-Number (C), \n"
+                                      "Shipping Address (A), or Password (P), or logout (Q): ")
 
 def displayProfileInfo(conn, email):
     curs = conn.cursor()
@@ -292,9 +318,66 @@ def displayProfileInfo(conn, email):
 
     print("Email: " + str(results[0]))
     print("Name: " + str(results[2]) + " " + str(results[3]))
-    print("CC-Number: " + str(results[4]))
-    print("Shipping Address: " + str(results[5]))
+    if email.count("@" + employee_domain) == 0:
+        print("CC-Number: " + str(results[4]))
+        print("Shipping Address: " + str(results[5]))
 
+
+def getCartOrderID(conn, email):
+    curs = conn.cursor()
+
+    query = "SELECT * FROM CUSTOMER_ORDER WHERE ProfileEmail = ? AND Status = 'CA'"
+    curs.execute(query, (f"{email}",))
+    result = curs.fetchone()
+
+
+    if result is None:
+        #NEED TO CREATE NEW CART HERE
+        curs.execute("SELECT Count(*) FROM CUSTOMER_ORDER")
+
+        tup = curs.fetchone()
+        results2 = []
+        for item in tup:
+            results2.append(item)
+        num = int(results2[0]) + 1
+        orderNum = "ORDER"
+        if (num < 10):
+            orderNum += "00" + str(num)
+        elif (num < 100):
+            orderNum += "0" + str(num)
+        else:
+            orderNum += str(num)
+
+        curs.execute("SELECT BillingAddress FROM PROFILE WHERE Email = ?", (email,))
+        result = curs.fetchone()
+        results1 = []
+        for item in result:
+            results1.append(item)
+
+        if results1[0] is None:
+            curs.execute("INSERT INTO CUSTOMER_ORDER  VALUES (?, ?, ?, ?)",
+                         (orderNum, "None", "CA", email))
+        if results1[0] is not None:
+            curs.execute("INSERT INTO CUSTOMER_ORDER  VALUES (?, ?, ?, ?)",
+                         (orderNum, results1[0], "CA", email))
+
+    else:
+        results1 = []
+        for item in result:
+            results1.append(item)
+        orderNum = results1[0]
+
+        curs.execute("SELECT BillingAddress FROM PROFILE WHERE Email = ?", (email,))
+        result = curs.fetchone()
+        results2 = []
+        for item in result:
+            results2.append(item)
+
+        curs.execute("UPDATE CUST_ORDER SET ShipAdd WHERE ProfileEmail = ? AND status = 'CA'", (email,))
+
+
+    conn.commit()
+    return orderNum
 
 
 def get_connection():
