@@ -47,9 +47,12 @@ def editCardInfo(desiredEmail, dbName):
     curs = conn.cursor()
 
     newCard = input("Enter new card info: ")
-    curs.execute("UPDATE PROFILE SET CardInfo = ? WHERE Email = ?", [newCard, desiredEmail])
+    if len(newCard) == 16 and newCard.isdigit():
+        curs.execute("UPDATE PROFILE SET CardInfo = ? WHERE Email = ?", [newCard, desiredEmail])
+        conn.commit()
+    else:
+        print("New card info is not valid.")
 
-    conn.commit()
     curs.close()
     conn.close()
 

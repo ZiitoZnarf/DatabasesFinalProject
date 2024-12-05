@@ -330,7 +330,8 @@ def displayProfileInfo(conn, email):
     print("Email: " + str(results[0]))
     print("Name: " + str(results[2]) + " " + str(results[3]))
     if email.count("@" + employee_domain) == 0:
-        print("CC-Number: " + str(results[4]))
+        ccInfo = str(results[4])
+        print("CC-Number: " + ccInfo[0:4] + " " + ccInfo[4:8] + " " + ccInfo[8:12] + " " + ccInfo[12:16])
         print("Shipping Address: " + str(results[5]))
 
 
