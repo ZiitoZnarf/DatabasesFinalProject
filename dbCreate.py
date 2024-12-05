@@ -101,10 +101,10 @@ def insert_sample_data(cursor):
     INSERT OR IGNORE INTO PROFILE (Email, Password, FirstName, LastName, CardInfo, BillingAddress)
     VALUES (?, ?, ?, ?, ?, ?);
     ''', [
-        ('johnsmith@email.com', 'password1', 'John', 'Smith', '1234-5678-9098-7654', '123 Elm Street, Las Vegas, NV'),
-        ('johndoe1982@email.com', 'goodP@ssword', 'John', 'Doe', '5468-1546-1746-7495', '8963 North Rutgers Street, Pittsburgh, PA'),
-        ('janedoe1990@email.com', 'stayOut', 'Jane', 'Doe', '9546-1741-7368-9857', '8963 North Rutgers Street, Pittsburgh, PA'),
-        ('real-life-fish@email.com', 'water', 'Fish', 'Gill', '9820-0324-8904-9875', '6423 Ocean Lane, Los Angeles, CA')
+        ('johnsmith@email.com', 'password1', 'John', 'Smith', '1234567890987654', '123 Elm Street, Las Vegas, NV'),
+        ('johndoe1982@email.com', 'goodP@ssword', 'John', 'Doe', '5468154617467495', '8963 North Rutgers Street, Pittsburgh, PA'),
+        ('janedoe1990@email.com', 'stayOut', 'Jane', 'Doe', '9546174173689857', '8963 North Rutgers Street, Pittsburgh, PA'),
+        ('real-life-fish@email.com', 'water', 'Fish', 'Gill', '9820032489049875', '6423 Ocean Lane, Los Angeles, CA')
     ])
 
     cursor.executemany('''
@@ -122,10 +122,62 @@ def insert_sample_data(cursor):
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
     ''', [
         ('CL001', 'White Air Forces', 'Shoe', 'Mid-top', '19', 'Nike', 100, 25.00, True, False, False),
-        ('CL002', 'Black Air Forces', 'Shoe', 'Low-top', '10.5', 'Nike', 100, 25.00, None, True, False),
-        ('CL003', 'Marvin Harrison Jr. Jersey', 'Shirt', 'Jersey', 'XL', 'Nike', 0, 100.00, False, True, False),
-        ('CL004', 'Marvin Harrison Jr. Jersey', 'Shirt', 'Jersey', 'M', 'Nike', 0, 100.00, False, False, True),
-        ('CL005', 'LeBron Witness 8', 'Shoe', 'High-top', '11.5', 'Nike', 25, 110.00, False, True, False)
+        ('CL002', 'White Air Forces', 'Shoe', 'Mid-top', '10', 'Nike', 100, 25.00, False, True, False),
+        ('CL003', 'White Air Forces', 'Shoe', 'Mid-top', '11', 'Nike', 100, 25.00, False, True, False),
+        ('CL004', 'Black Air Forces', 'Shoe', 'Low-top', '10.5', 'Nike', 100, 25.00, None, True, False),
+        ('CL005', 'Marvin Harrison Jr. Jersey', 'Shirt', 'Jersey', 'XL', 'Nike', 19, 100.00, False, True, False),
+        ('CL006', 'Marvin Harrison Jr. Jersey', 'Shirt', 'Jersey', 'M', 'Nike', 3, 100.00, False, False, True),
+        ('CL007', 'LeBron Witness 8', 'Shoe', 'High-top', '11.5', 'Nike', 25, 110.00, False, True, False),
+        ('CL008', 'LeBron Witness 8', 'Shoe', 'High-top', '12', 'Nike', 30, 110.00, False, True, False),
+        ('CL009', 'LeBron Witness 8', 'Shoe', 'High-top', '13', 'Nike', 50, 110.00, False, True, False),
+        ('CL010', 'LeBron Witness 8', 'Shoe', 'High-top', '6', 'Nike', 45, 110.00, True, False, False),
+        ('CL011', 'LeBron Witness 8', 'Shoe', 'High-top', '7', 'Nike', 15, 110.00, True, False, False),
+        ('CL0012', 'Campus 00s', 'Shoe', 'Low-top', '5', 'Adidas', 40, 110.00, True, False, False),
+        ('CL0013', 'Campus 00s', 'Shoe', 'Low-top', '5.5', 'Adidas', 36, 110.00, True, False, False),
+        ('CL0014', 'Campus 00s', 'Shoe', 'Low-top', '6', 'Adidas', 79, 110.00, True, False, False),
+        ('CL0015', 'Campus 00s', 'Shoe', 'Low-top', '6.5', 'Adidas', 15, 110.00, True, False, False),
+        ('CL0016', 'Campus 00s', 'Shoe', 'Low-top', '6.5', 'Adidas', 45, 110.00, True, False, False),
+        ('CL0017', 'Campus 00s', 'Shoe', 'Low-top', '9', 'Adidas', 76, 110.00, False, True, False),
+        ('CL0018', 'Campus 00s', 'Shoe', 'Low-top', '9.5', 'Adidas', 34, 110.00, False, True, False),
+        ('CL0019', 'Campus 00s', 'Shoe', 'Low-top', '10', 'Adidas', 78, 110.00, False, True, False),
+        ('CL0020', 'Campus 00s', 'Shoe', 'Low-top', '10.5', 'Adidas', 65, 110.00, False, True, False),
+        ('CL0021', 'Campus 00s', 'Shoe', 'Low-top', '11', 'Adidas', 43, 110.00, False, True, False),
+        ('CL0022', 'Campus 00s', 'Shoe', 'Low-top', '5', 'Adidas', 15, 110.00, False, False, True),
+        ('CL0023', 'Campus 00s', 'Shoe', 'Low-top', '5.5', 'Adidas', 56, 110.00, False, False, True),
+        ('CL0024', 'Campus 00s', 'Shoe', 'Low-top', '6', 'Adidas', 43, 110.00, False, False, True),
+        ('CL0025', 'Campus 00s', 'Shoe', 'Low-top', '6.5', 'Adidas', 24, 110.00, False, False, True),
+        ('CL0026', 'Campus 00s', 'Shoe', 'Low-top', '7', 'Adidas', 89, 110.00, False, False, True),
+        ('CL0027', 'Tour Snap back', 'Accessories', 'Golf Hat', 'S', 'Adidas', 24, 32.00, False, False, True),
+        ('CL0028', 'Tour Snap back', 'Accessories', 'Golf Hat', 'M', 'Adidas', 56, 32.00, False, False, True),
+        ('CL0029', 'Tour Snap back', 'Accessories', 'Golf Hat', 'L', 'Adidas', 43, 32.00, False, False, True),
+        ('CL0030', 'Tour Snap back', 'Accessories', 'Golf Hat', 'S', 'Adidas', 56, 32.00, False, True, False),
+        ('CL0031', 'Tour Snap back', 'Accessories', 'Golf Hat', 'M', 'Adidas', 43, 32.00, False, True, False),
+        ('CL0032', 'Tour Snap back', 'Accessories', 'Golf Hat', 'L', 'Adidas', 45, 32.00, False, True, False),
+        ('CL0033', 'Tour Snap back', 'Accessories', 'Golf Hat', 'S', 'Adidas', 78, 32.00, True, False, False),
+        ('CL0034', 'Tour Snap back', 'Accessories', 'Golf Hat', 'M', 'Adidas', 75, 32.00, True, False, False),
+        ('CL0035', 'Tour Snap back', 'Accessories', 'Golf Hat', 'L', 'Adidas', 35, 32.00, True, False, False),
+        ('CL0036', 'Skeleton Trucker Hat', 'Accessories', 'Trucker Hat', 'S', 'Adidas', 35, 26.00, True, False, False),
+        ('CL0037', 'Skeleton Trucker Hat', 'Accessories', 'Trucker Hat', 'M', 'Adidas', 56, 26.00, True, False, False),
+        ('CL0038', 'Skeleton Trucker Hat', 'Accessories', 'Trucker Hat', 'L', 'Adidas', 87, 26.00, True, False, False),
+        ('CL0039', 'Skeleton Trucker Hat', 'Accessories', 'Trucker Hat', 'S', 'Adidas', 43, 26.00, False, True, False),
+        ('CL0040', 'Skeleton Trucker Hat', 'Accessories', 'Trucker Hat', 'M', 'Adidas', 46, 26.00, False, True, False),
+        ('CL0041', 'Skeleton Trucker Hat', 'Accessories', 'Trucker Hat', 'L', 'Adidas', 76, 26.00, False, True, False),
+        ('CL0042', 'Skeleton Trucker Hat', 'Accessories', 'Trucker Hat', 'S', 'Adidas', 56, 26.00, False, False, True),
+        ('CL0043', 'Skeleton Trucker Hat', 'Accessories', 'Trucker Hat', 'M', 'Adidas', 67, 26.00, False, False, True),
+        ('CL0044', 'Skeleton Trucker Hat', 'Accessories', 'Trucker Hat', 'L', 'Adidas', 76, 26.00, False, False, True),
+        ('CL0045', 'Independent Spanning Chest', 'Shirt', 'Graphic Tee', 'S', 'Independent', 35, 28.00, False, True, False),
+        ('CL0046', 'Independent Spanning Chest', 'Shirt', 'Graphic Tee', 'M', 'Independent', 47, 28.00, False, True,False),
+        ('CL0047', 'Independent Spanning Chest', 'Shirt', 'Graphic Tee', 'L', 'Independent', 35, 28.00, False, True,False),
+        ('CL0047', 'Independent Spanning Chest', 'Shirt', 'Graphic Tee', 'XL', 'Independent', 35, 28.00, False, True,False),
+        ('CL0048', 'Independent Spanning Chest', 'Shirt', 'Graphic Tee', 'S', 'Independent', 75, 28.00, True, False, False),
+        ('CL0049', 'Independent Spanning Chest', 'Shirt', 'Graphic Tee', 'M', 'Independent', 43, 28.00, True, False,False),
+        ('CL0050', 'Independent Spanning Chest', 'Shirt', 'Graphic Tee', 'L', 'Independent', 46, 28.00, True, False,False),
+        ('CL0047', 'Independent Spanning Chest', 'Shirt', 'Graphic Tee', 'XL', 'Independent', 35, 28.00, True, False,False),
+        ('CL0051', 'Independent Spanning Chest', 'Shirt', 'Graphic Tee', 'S', 'Independent', 67, 28.00, False, False, True),
+        ('CL0052', 'Independent Spanning Chest', 'Shirt', 'Graphic Tee', 'M', 'Independent', 86, 28.00, False, False,True),
+        ('CL0053', 'Independent Spanning Chest', 'Shirt', 'Graphic Tee', 'L', 'Independent', 32, 28.00, False, False,True),
+        ('CL0047', 'Independent Spanning Chest', 'Shirt', 'Graphic Tee', 'XL', 'Independent', 35, 28.00, False, False,True),
+
     ])
 
     cursor.executemany('''
