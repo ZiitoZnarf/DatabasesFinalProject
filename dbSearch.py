@@ -5,78 +5,64 @@ def getFilters(dbName):
     conn = getConnection(dbName)
     c = conn.cursor()
 
-    print("For all of the following options, type 'skip' to skip")
+    print("For all of the following options, type the ENTER key to skip")
     print("Please keep in mind that filters are case sensitive")
 
-    description = input("What is the name of the item?\t")
-    if description == "skip" or description == "":
-        filters.append("")
-    else:
-        filters.append(description)
+    userMessage = "What is the name of the item?\t"
+    filters.append(getAnswerInOptions(userMessage, []))
 
     options = getOptions("SELECT BroadType FROM CLOTHING", c)
     userMessage = f"What is the broad type? Please choose from these options: {printOptions(options)}"
-    filters.append(getAnswer(userMessage, options))
+    filters.append(getAnswerInOptions(userMessage, options))
 
     if (filters[1] != ""):
         # Get all of the specific types corresponding to a broad type
         options = getOptions("SELECT SpecificType FROM CLOTHING WHERE BroadType = '" + filters[1] + "'", c)
         userMessage = f"What is the specific type? Please choose from these options: {printOptions(options)}"
         # Add the answer to our filters
-        filters.append(getAnswer(userMessage, options))
+        filters.append(getAnswerInOptions(userMessage, options))
 
         # Get all of the sizes corresponding to a broad type
         options = getOptions("SELECT Size FROM CLOTHING WHERE BroadType = '" + filters[1] + "'", c)
         userMessage = f"What is the size? Please choose from these options: {printOptions(options)}"
         # Add the answer to our filters
-        filters.append(getAnswer(userMessage, options))
+        filters.append(getAnswerInOptions(userMessage, options))
 
         # Get all of the brands corresponding to a broad type
         options = getOptions("SELECT Brand FROM CLOTHING WHERE BroadType = '" + filters[1] + "'", c)
         userMessage = f"What is the brand? Please choose from these options: {printOptions(options)}"
         # Add the answer to our filters
-        filters.append(getAnswer(userMessage, options))
+        filters.append(getAnswerInOptions(userMessage, options))
     else:
-        specificType = input("What is the specific type? (E.g Jersey, Low-top, etc.)\t")
-        if specificType == "skip":
-            filters.append("")
-        else:
-            filters.append(specificType)
+        userMessage = "What is the specific type? (E.g Jersey, Low-top, etc.)\t"
+        filters.append(getAnswerInOptions(userMessage, []))
 
-        size = input("What is the size?\t")
-        if size == "skip":
-            filters.append("")
-        else:
-            filters.append(size)
+        userMessage = "What is the size?\t"
+        filters.append(getAnswerInOptions(userMessage, []))
 
-        brand = input("What is the brand?  (E.g Nike, Adidas, etc.)\t")
-        if brand == "skip":
-            filters.append("")
-        else:
-            filters.append(brand)
-
-
+        userMessage = "What is the brand?  (E.g Nike, Adidas, etc.)\t"
+        filters.append(getAnswerInOptions(userMessage, []))
 
     minStock = input("What is the minimum stock?\t")
-    if minStock == "skip" or minStock == "":
-        filters.append("")
-    else:
+    try:
         filters.append(int(minStock))
+    except ValueError:
+        filters.append("")
 
     minPrice = input("What is the minimum price?\t")
-    if minPrice == "skip" or minPrice == "":
-        filters.append("")
-    else:
+    try:
         filters.append(float(minPrice))
+    except ValueError:
+        filters.append("")
 
     maxPrice = input("What is the maximum price?\t")
-    if maxPrice == "skip" or maxPrice == "":
-        filters.append("")
-    else:
+    try:
         filters.append(float(maxPrice))
+    except ValueError:
+        filters.append("")
 
     userMessage = "What is the gender? M, F, or Y\t"
-    filters.append(getAnswer(userMessage, ["M", "F", "Y"]))
+    filters.append(getAnswerInOptions(userMessage, ["M", "F", "Y"]))
 
     # Close connections
     c.close()
@@ -145,11 +131,44 @@ def search(filters, orderNum, dbName, employee):
         if input("Type Y to add something to your cart.\t").upper().strip() == "Y":
             itemIndex = -1
             # Make sure they are adding a valid item that was printed
-            while itemIndex < 0 or itemIndex > itemNum:
-                itemIndex = int(input("Enter the number of the item you want to add:\t"))
+            while itemIndex < 0 or itemIndex >= itemNum:
+                try:
+                    itemIndex = int(input("Enter the number of the item you want to add:\t"))
+                except ValueError:
+                    print("Enter a number!")
 
             quantity = int(input("How many would you like to buy?\t"))
             addItem(results[itemIndex - 1][0], quantity, orderNum, dbName)
+    else:
+        if input("Type Y to edit an item.\t").upper().strip() == "Y":
+            itemIndex = -1
+            # Make sure they are editing a valid item that was printed
+            while itemIndex < 0 or itemIndex >= itemNum:
+                try:
+                    itemIndex = int(input("Enter the number of the item you want to add:\t"))
+                except ValueError:
+                    print("Enter a number!")
+
+            options = ["Description", "BroadType", "SpecificType", "Size", "Brand", "Stock", "Price", "Gender"]
+            userMessage = f"What is the element you would like to edit? Here are the options: {printOptions(options)}"
+            column = getAnswerInOptions(userMessage, options)
+
+            userMessage = "What would you like to change it to?\t"
+            newVal = getAnswerInOptions(userMessage, [])
+
+            editItem(results[itemIndex - 1][0], column, newVal, dbName)
+
+    c.close()
+    conn.close()
+
+def editItem(itemID, column, newVal, dbName):
+    conn = getConnection(dbName)
+    c = conn.cursor()
+
+    # Update the column to the new value
+    query = f"UPDATE CLOTHING SET {column} = ? WHERE UniqueNum = ?"
+    c.execute(query, [newVal, itemID])
+    conn.commit()
 
     c.close()
     conn.close()
@@ -159,11 +178,10 @@ def addItem(itemID, quantity, orderNum, dbName):
     c = conn.cursor()
 
     # Get the ID and Stock of the item being added to the cart
-    c.execute("SELECT UniqueNum, Stock FROM CLOTHING WHERE UniqueNum = ?", [itemID])
+    c.execute("SELECT Stock FROM CLOTHING WHERE UniqueNum = ?", [itemID])
     results = c.fetchall()
 
-    uniqueID = results[0][0]
-    stock = results[0][1]
+    stock = results[0][0]
 
     # return if they are ordering more than what is in stock
     if quantity > stock:
@@ -171,10 +189,10 @@ def addItem(itemID, quantity, orderNum, dbName):
         return
 
     # Add the item to holds table
-    c.execute("INSERT INTO HOLDS (OrderNum, ClothUniID, Quantity) VALUES (?, ?, ?)", [orderNum, uniqueID, quantity])
+    c.execute("INSERT INTO HOLDS (OrderNum, ClothUniID, Quantity) VALUES (?, ?, ?)", [orderNum, itemID, quantity])
     conn.commit()
     # Update the stock of the item that was just ordered
-    c.execute("UPDATE CLOTHING SET Stock = ? WHERE UniqueNum = ?", [stock - quantity, uniqueID])
+    c.execute("UPDATE CLOTHING SET Stock = ? WHERE UniqueNum = ?", [stock - quantity, itemID])
     conn.commit()
 
     c.close()
@@ -204,17 +222,19 @@ def printOptions(options):
 
     optionsString = "\n"
     for option in options:
-        optionsString += option + "\n"
+        optionsString += option + " | "
 
-    return optionsString
+    return optionsString + "\n"
 
-def getAnswer(userMessage, options):
+def getAnswerInOptions(userMessage, options):
     # default message to get into the while loop
     answer = "thismessageiscompletelyinvalidandthereisnothinglikethisinthedatabase"
 
-    while answer not in options and answer != "skip":
+    # 0 options also represents infinite options
+    if len(options) == 0:
+        return input(userMessage)
+
+    while answer not in options and answer != "":
         answer = input(userMessage)
 
-    if answer == "skip":
-        return ""
     return answer
