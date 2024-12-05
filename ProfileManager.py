@@ -49,6 +49,7 @@ def editCardInfo(desiredEmail, dbName):
     newCard = input("Enter new card info: ")
     if len(newCard) == 16 and newCard.isdigit():
         curs.execute("UPDATE PROFILE SET CardInfo = ? WHERE Email = ?", [newCard, desiredEmail])
+        conn.commit()
     else:
         print("New card info is not valid.")
 
