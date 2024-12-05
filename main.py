@@ -1,4 +1,4 @@
-import sqlite3#, dbSearch, orderManager, profileManager
+import sqlite3, dbSearch, orderManager, ProfileManager
 
 
 database = "ClothingStore.db"
@@ -200,15 +200,16 @@ def employee_options(conn, emp_email):
 
 
 def option_search(conn, email):
+    cartID = getCartOrderID(conn, email)
     has_quit = False
     isEmployee = False
     if email.count("@" + employee_domain) == 1:
         isEmployee = True
 
     ###while not has_quit:
-    #filters = dbSearch.getFilters(database)
-    #dbSearch.search(filters)
-        '''''''''
+    filters = dbSearch.getFilters(database)
+    dbSearch.search(filters, cartID, database, isEmployee)
+    '''''''''
         is_selecting = True
 
         print("Type an item's \"UniqueID\" to add it to cart.")
@@ -242,7 +243,7 @@ def option_search(conn, email):
 
 def option_cart(conn, email):
     has_quit = False
-    #orderManager.viewCart(email)
+    orderManager.viewCart(email)
 
 
 def option_profile(conn, email):
@@ -252,57 +253,67 @@ def option_profile(conn, email):
     displayProfileInfo(conn, email)
 
     if email.count("@" + employee_domain) == 1:
-        inp_selection = input("\nWould you like to Change Name (N) or Password (P) or logout (Q): ")
+        inp_selection = input("\nWould you like to Change Name (N) or Password (P) or Return to Menu (Q): ")
     else:
         inp_selection = input("\nWould you like to View Past Orders (O) or Change Name (N), CC-Number (C), \n"
-                              "Shipping Address (A), or Password (P), or logout (Q): ")
+                              "Shipping Address (A), or Password (P), or Return to Menu (Q): ")
 
     while not logged_out:
         if inp_selection.lower() == 'o' and email.count("@" + employee_domain) == 0:
-            #profileManager.viewOrders(email)
+            orderManager.viewPastOrders(email)
+            print("\n==Your Profile==\n")
+            displayProfileInfo(conn, email)
             if email.count("@" + employee_domain) == 1:
-                inp_selection = input("\nWould you like to Change Name (N) or Password (P) or logout (Q): ")
+                inp_selection = input("\nWould you like to Change Name (N) or Password (P) or Return to Menu (Q): ")
             else:
                 inp_selection = input("\nWould you like to View Past Orders (O) or Change Name (N), CC-Number (C), \n"
-                                      "Shipping Address (A), or Password (P), or logout (Q): ")
+                                      "Shipping Address (A), or Password (P), or Return to Menu (Q): ")
         elif inp_selection.lower() == 'n':
-            #profileManager.changeName(email)
+            ProfileManager.editName(email, database)
+            print("\n==Your Profile==\n")
+            displayProfileInfo(conn, email)
             if email.count("@" + employee_domain) == 1:
-                inp_selection = input("\nWould you like to Change Name (N) or Password (P) or logout (Q): ")
+                inp_selection = input("\nWould you like to Change Name (N) or Password (P) or Return to Menu (Q): ")
             else:
                 inp_selection = input("\nWould you like to View Past Orders (O) or Change Name (N), CC-Number (C), \n"
-                                      "Shipping Address (A), or Password (P), or logout (Q): ")
+                                      "Shipping Address (A), or Password (P), or Return to Menu (Q): ")
         elif inp_selection.lower() == 'c' and email.count("@" + employee_domain) == 0:
-            #profileManager.changeCCInfo(email)
+            ProfileManager.editCardInfo(email, database)
+            print("\n==Your Profile==\n")
+            displayProfileInfo(conn, email)
             if email.count("@" + employee_domain) == 1:
-                inp_selection = input("\nWould you like to Change Name (N) or Password (P) or logout (Q): ")
+                inp_selection = input("\nWould you like to Change Name (N) or Password (P) or Return to Menu (Q): ")
             else:
                 inp_selection = input("\nWould you like to View Past Orders (O) or Change Name (N), CC-Number (C), \n"
-                                      "Shipping Address (A), or Password (P), or logout (Q): ")
+                                      "Shipping Address (A), or Password (P), or Return to Menu (Q): ")
         elif inp_selection.lower() == 'a' and email.count("@" + employee_domain) == 0:
-            #profileManager.changeAddress(email)
+            ProfileManager.editAddress(email, database)
+            print("\n==Your Profile==\n")
+            displayProfileInfo(conn, email)
             if email.count("@" + employee_domain) == 1:
-                inp_selection = input("\nWould you like to Change Name (N) or Password (P) or logout (Q): ")
+                inp_selection = input("\nWould you like to Change Name (N) or Password (P) or Return to Menu (Q): ")
             else:
                 inp_selection = input("\nWould you like to View Past Orders (O) or Change Name (N), CC-Number (C), \n"
-                                      "Shipping Address (A), or Password (P), or logout (Q): ")
+                                      "Shipping Address (A), or Password (P), or Return to Menu (Q): ")
         elif inp_selection.lower() == 'p':
-            #profileManager.changePassword(email)
+            ProfileManager.editPassword(email, database)
+            print("\n==Your Profile==\n")
+            displayProfileInfo(conn, email)
             if email.count("@" + employee_domain) == 1:
-                inp_selection = input("\nWould you like to Change Name (N) or Password (P) or logout (Q): ")
+                inp_selection = input("\nWould you like to Change Name (N) or Password (P) or Return to Menu (Q): ")
             else:
                 inp_selection = input("\nWould you like to View Past Orders (O) or Change Name (N), CC-Number (C), \n"
-                                      "Shipping Address (A), or Password (P), or logout (Q): ")
+                                      "Shipping Address (A), or Password (P), or Return to Menu (Q): ")
         elif inp_selection.lower() == 'q':
             logged_out = True
         else:
             print ("\nSelection not Recognized, please enter one of the following options:")
 
             if email.count("@" + employee_domain) == 1:
-                inp_selection = input("Change Name (N) or Password (P) or logout (Q): ")
+                inp_selection = input("Change Name (N) or Password (P) or Return to Menu (Q): ")
             else:
                 inp_selection = input("View Past Orders (O) or Change Name (N), CC-Number (C), \n"
-                                      "Shipping Address (A), or Password (P), or logout (Q): ")
+                                      "Shipping Address (A), or Password (P), or Return to Menu (Q): ")
 
 def displayProfileInfo(conn, email):
     curs = conn.cursor()
@@ -373,7 +384,8 @@ def getCartOrderID(conn, email):
         for item in result:
             results2.append(item)
 
-        curs.execute("UPDATE CUST_ORDER SET ShipAdd WHERE ProfileEmail = ? AND status = 'CA'", (email,))
+        if not results2[0] is None:
+            curs.execute("UPDATE CUSTOMER_ORDER SET ShipAdd = ? WHERE ProfileEmail = ? AND status = 'CA'", (results2[0], email))
 
 
     conn.commit()

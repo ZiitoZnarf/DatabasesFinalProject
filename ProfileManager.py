@@ -9,6 +9,7 @@ def editName(desiredEmail, dbName):
     curs.execute("UPDATE PROFILE SET FirstName = ? WHERE Email = ?", [firstName, desiredEmail])
     curs.execute("UPDATE PROFILE SET LastName = ? WHERE Email = ?", [lastName, desiredEmail])
 
+    conn.commit()
     curs.close()
     conn.close()
 
@@ -26,6 +27,7 @@ def editPassword(desiredEmail, dbName):
         else:
             print("Incorrect password. Access denied")
 
+    conn.commit()
     curs.close()
     conn.close()
 
@@ -36,6 +38,7 @@ def editAddress(desiredEmail, dbName):
     newAddress = input("Enter new billing address: ")
     curs.execute("UPDATE PROFILE SET BillingAddress = ? WHERE Email = ?", [newAddress, desiredEmail])
 
+    conn.commit()
     curs.close()
     conn.close()
 
@@ -46,6 +49,7 @@ def editCardInfo(desiredEmail, dbName):
     newCard = input("Enter new card info: ")
     curs.execute("UPDATE PROFILE SET CardInfo = ? WHERE Email = ?", [newCard, desiredEmail])
 
+    conn.commit()
     curs.close()
     conn.close()
 

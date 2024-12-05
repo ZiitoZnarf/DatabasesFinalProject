@@ -3,7 +3,7 @@ import sqlite3
 import random
 
 
-dbName = 'ClothingStore.db';
+dbName = 'ClothingStore.db'
 def viewCart(email):
 
     cart = getCart(email)
@@ -37,7 +37,7 @@ def viewCart(email):
             print()
     else:
         print("Cart is empty")
-    
+
     return cart
 
 def getCart(email):
