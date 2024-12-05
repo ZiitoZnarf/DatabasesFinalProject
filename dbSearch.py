@@ -8,7 +8,11 @@ def getFilters(dbName):
     print("For all of the following options, type 'skip' to skip")
     print("Please keep in mind that filters are case sensitive")
 
-    filters.append(input("What is the name of the item?\t"))
+    description = input("What is the name of the item?\t")
+    if description == "skip" or description == "":
+        filters.append("")
+    else:
+        filters.append(description)
 
     options = getOptions("SELECT BroadType FROM CLOTHING", c)
     userMessage = f"What is the broad type? Please choose from these options: {printOptions(options)}"
@@ -33,7 +37,7 @@ def getFilters(dbName):
         # Add the answer to our filters
         filters.append(getAnswer(userMessage, options))
     else:
-        specificType = input("What is the specific type? (E.g Jersey, Low-top, etc.)")
+        specificType = input("What is the specific type? (E.g Jersey, Low-top, etc.)\t")
         if specificType == "skip":
             filters.append("")
         else:
@@ -54,19 +58,19 @@ def getFilters(dbName):
 
 
     minStock = input("What is the minimum stock?\t")
-    if minStock == "skip":
+    if minStock == "skip" or minStock == "":
         filters.append("")
     else:
         filters.append(int(minStock))
 
     minPrice = input("What is the minimum price?\t")
-    if minPrice == "skip":
+    if minPrice == "skip" or minPrice == "":
         filters.append("")
     else:
         filters.append(float(minPrice))
 
     maxPrice = input("What is the maximum price?\t")
-    if maxPrice == "skip":
+    if maxPrice == "skip" or maxPrice == "":
         filters.append("")
     else:
         filters.append(float(maxPrice))
@@ -125,7 +129,7 @@ def search(filters, orderNum, dbName, employee):
     # Formatted string to print header
     header = f"{'Description':<30}{'Broad Type':<15}{'Specific Type':<15}{'Size':<10}{'Brand':<15}{'Stock':<10}{'Price':<10}{'Gender':<10}"
     print(header)
-    print("-" * len(header) + str(5))  # Print a divider line
+    print("-" * (len(header) + 5))  # Print a divider line
 
     itemNum = 1
     for item in results:
@@ -138,24 +142,24 @@ def search(filters, orderNum, dbName, employee):
         itemNum += 1
 
     if not employee:
-        if input("Type Y to add something to your cart.\t").upper() == "Y":
+        if input("Type Y to add something to your cart.\t").upper().strip() == "Y":
             itemIndex = -1
             # Make sure they are adding a valid item that was printed
-            while itemIndex < 0 and itemIndex > itemNum:
-                itemIndex = input("Enter the number of the item you want to add:\t")
+            while itemIndex < 0 or itemIndex > itemNum:
+                itemIndex = int(input("Enter the number of the item you want to add:\t"))
 
-            quantity = input("How many would you like to buy?\t")
-            addItem(results[itemIndex - 1][0], quantity, orderNum)
+            quantity = int(input("How many would you like to buy?\t"))
+            addItem(results[itemIndex - 1][0], quantity, orderNum, dbName)
 
     c.close()
     conn.close()
 
-def addItem(itemID, quantity, orderNum):
+def addItem(itemID, quantity, orderNum, dbName):
     conn = getConnection(dbName)
     c = conn.cursor()
 
     # Get the ID and Stock of the item being added to the cart
-    c.execute(f"SELECT UniqueNum, Stock FROM CLOTHINGSTORE WHERE UniqueNum = {itemID}")
+    c.execute("SELECT UniqueNum, Stock FROM CLOTHING WHERE UniqueNum = ?", [itemID])
     results = c.fetchall()
 
     uniqueID = results[0][0]
@@ -167,9 +171,11 @@ def addItem(itemID, quantity, orderNum):
         return
 
     # Add the item to holds table
-    c.execute(f"INSERT INTO HOLDS (OrderNum, ClothUniID, Quantity) VALUES ({orderNum}, {uniqueID}, {quantity})")
+    c.execute("INSERT INTO HOLDS (OrderNum, ClothUniID, Quantity) VALUES (?, ?, ?)", [orderNum, uniqueID, quantity])
+    conn.commit()
     # Update the stock of the item that was just ordered
-    c.execute(f"UPDATE CLOTHING SET Stock = {stock - quantity} WHERE UniqueNum = {uniqueID}")
+    c.execute("UPDATE CLOTHING SET Stock = ? WHERE UniqueNum = ?", [stock - quantity, uniqueID])
+    conn.commit()
 
     c.close()
     conn.close()
