@@ -4,4 +4,4 @@ Our project manages a clothing store database. It allows employees to edit their
 
 ## Running The Project
 
-Run main.py in order to run the project.
+First, run dbCreate.py. Then, run main.py in order to run the project.
