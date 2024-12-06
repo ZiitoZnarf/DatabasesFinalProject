@@ -1,246 +1,296 @@
 import sqlite3
 
-# Global constant for database name
-DB_NAME = 'ClothingStore.db'
+def getFilters(dbName):
+    filters = []
+    conn = getConnection(dbName)
+    c = conn.cursor()
 
-def connect_db():
-    """Establishes a connection to the SQLite database."""
-    conn = sqlite3.connect(DB_NAME)
-    conn.execute("PRAGMA foreign_keys = ON;")
+    print("For all of the following options, type the ENTER key to skip")
+    print("Please keep in mind that filters are case sensitive")
+
+    userMessage = "What is the name of the item?\t"
+    filters.append(getAnswerInOptions(userMessage, []))
+
+    options = getOptions("SELECT BroadType FROM CLOTHING", c)
+    userMessage = f"What is the broad type? Please choose from these options: {printOptions(options)}"
+    filters.append(getAnswerInOptions(userMessage, options))
+
+    if (filters[1] != ""):
+        # Get all of the specific types corresponding to a broad type
+        options = getOptions("SELECT SpecificType FROM CLOTHING WHERE BroadType = '" + filters[1] + "'", c)
+        userMessage = f"What is the specific type? Please choose from these options: {printOptions(options)}"
+        # Add the answer to our filters
+        filters.append(getAnswerInOptions(userMessage, options))
+
+        # Get all of the sizes corresponding to a broad type
+        options = getOptions("SELECT Size FROM CLOTHING WHERE BroadType = '" + filters[1] + "'", c)
+        userMessage = f"What is the size? Please choose from these options: {printOptions(options)}"
+        # Add the answer to our filters
+        filters.append(getAnswerInOptions(userMessage, options))
+
+        # Get all of the brands corresponding to a broad type
+        options = getOptions("SELECT Brand FROM CLOTHING WHERE BroadType = '" + filters[1] + "'", c)
+        userMessage = f"What is the brand? Please choose from these options: {printOptions(options)}"
+        # Add the answer to our filters
+        filters.append(getAnswerInOptions(userMessage, options))
+    else:
+        userMessage = "What is the specific type? (E.g Jersey, Low-top, etc.)\t"
+        filters.append(getAnswerInOptions(userMessage, []))
+
+        userMessage = "What is the size?\t"
+        filters.append(getAnswerInOptions(userMessage, []))
+
+        userMessage = "What is the brand?  (E.g Nike, Adidas, etc.)\t"
+        filters.append(getAnswerInOptions(userMessage, []))
+
+    minStock = input("What is the minimum stock?\t")
+    try:
+        filters.append(int(minStock))
+    except ValueError:
+        filters.append("")
+
+    minPrice = input("What is the minimum price?\t")
+    try:
+        filters.append(float(minPrice))
+    except ValueError:
+        filters.append("")
+
+    maxPrice = input("What is the maximum price?\t")
+    try:
+        filters.append(float(maxPrice))
+    except ValueError:
+        filters.append("")
+
+    userMessage = "What is the gender? M, F, or Y\t"
+    filters.append(getAnswerInOptions(userMessage, ["M", "F", "Y"]))
+
+    # Close connections
+    c.close()
+    conn.close()
+    # Returned like [description, broadType, specificType, Size, Brand, Stock, minPrice, maxPrice, Gender <F, M, Y>
+    return filters
+
+def search(filters, orderNum, dbName, employee):
+    query = "SELECT * FROM CLOTHING WHERE 1 = 1"
+
+    params = []
+    if filters[0] != "":
+        query += " AND Description LIKE ?"
+        params.append(f"%{filters[0]}%")
+    if filters[1] != "":
+        query += " AND BroadType = ?"
+        params.append(filters[1])
+    if filters[2] != "":
+        query += " AND SpecificType = ?"
+        params.append(filters[2])
+    if filters[3] != "":
+        query += " AND Size = ?"
+        params.append(filters[3])
+    if filters[4] != "":
+        query += " AND Brand = ?"
+        params.append(filters[4])
+    if filters[5] != "":
+        query += " AND Stock >= ?"
+        params.append(filters[5])
+    if filters[6] != "":
+        query += " AND Price >= ?"
+        params.append(filters[6])
+    if filters[7] != "":
+        query += " AND Price <= ?"
+        params.append(filters[7])
+    if filters[8] != "":
+        if filters[8] == "M":
+            query += " AND GenderM = 1"
+        elif filters[8] == "F":
+            query += " AND GenderF = 1"
+        elif filters[8] == "Y":
+            query += " AND GenderY = 1"
+
+    # Create connections and execute query
+    conn = getConnection(dbName)
+    c = conn.cursor()
+    c.execute(query, params)
+    results = c.fetchall()
+
+    # Formatted string to print header
+    header = f"{'Description':<30}{'Broad Type':<15}{'Specific Type':<15}{'Size':<10}{'Brand':<15}{'Stock':<10}{'Price':<10}{'Gender':<10}"
+    print(header)
+    print("-" * (len(header) + 5))  # Print a divider line
+
+    itemNum = 1
+    for item in results:
+        # Find the gender of the clothing
+        gender = "M" if item[9] else "F" if item[8] else "Y" if item[10] else "Unknown"
+
+        # Print the info of the item formatted to match the header
+        print(f"{itemNum} {item[1]:<28}{item[2]:<15}{item[3]:<15}{item[4]:<10}"
+              f"{item[5]:<15}{item[6]:<10}{item[7]:<10}{gender:<10}")
+        itemNum += 1
+
+    if not employee:
+        if input("Type Y to add something to your cart.\t").upper().strip() == "Y":
+            itemIndex = -1
+            # Make sure they are adding a valid item that was printed
+            while itemIndex < 0 or itemIndex >= itemNum:
+                try:
+                    itemIndex = int(input("Enter the number of the item you want to add:\t"))
+                except ValueError:
+                    print("Enter a number!")
+
+            quantity = int(input("How many would you like to buy?\t"))
+            addItem(results[itemIndex - 1][0], quantity, orderNum, dbName)
+    else:
+        if input("Type Y to edit an item.\t").upper().strip() == "Y":
+            itemIndex = -1
+            # Make sure they are editing a valid item that was printed
+            while itemIndex < 0 or itemIndex >= itemNum:
+                try:
+                    itemIndex = int(input("Enter the number of the item you want to add:\t"))
+                except ValueError:
+                    print("Enter a number!")
+
+            options = ["Description", "BroadType", "SpecificType", "Size", "Brand", "Stock", "Price", "Gender"]
+            userMessage = f"What is the element you would like to edit? Here are the options: {printOptions(options)}"
+            column = getAnswerInOptions(userMessage, options)
+
+            userMessage = "What would you like to change it to?\t"
+            newVal = getAnswerInOptions(userMessage, [])
+
+            editItem(results[itemIndex - 1][0], column, newVal, dbName)
+
+    c.close()
+    conn.close()
+
+def editItem(itemID, column, newVal, dbName):
+    conn = getConnection(dbName)
+    c = conn.cursor()
+
+    # Update the column to the new value
+    query = f"UPDATE CLOTHING SET {column} = ? WHERE UniqueNum = ?"
+    c.execute(query, [newVal, itemID])
+    conn.commit()
+    print("Item edited!")
+
+    c.close()
+    conn.close()
+
+def addItem(itemID, quantity, orderNum, dbName):
+    conn = getConnection(dbName)
+    c = conn.cursor()
+
+    # Get the ID and Stock of the item being added to the cart
+    c.execute("SELECT Stock FROM CLOTHING WHERE UniqueNum = ?", [itemID])
+    results = c.fetchall()
+
+    stock = results[0][0]
+
+    # return if they are ordering more than what is in stock
+    if quantity > stock:
+        print("There is not that much in stock!")
+        return
+
+    # Add the item to holds table
+    c.execute("INSERT INTO HOLDS (OrderNum, ClothUniID, Quantity) VALUES (?, ?, ?)", [orderNum, itemID, quantity])
+    conn.commit()
+    # Update the stock of the item that was just ordered
+    c.execute("UPDATE CLOTHING SET Stock = ? WHERE UniqueNum = ?", [stock - quantity, itemID])
+    conn.commit()
+
+    print("Item added to cart!")
+
+    c.close()
+    conn.close()
+
+def getConnection(dbName):
+    conn = sqlite3.connect(dbName)
+    conn.row_factory = sqlite3.Row
     return conn
 
-def initialize_db():
-    """Creates tables and inserts initial data into the database."""
-    conn = connect_db()
-    cursor = conn.cursor()
+def getOptions(query, c):
+    c.execute(query)
+    results = c.fetchall()
 
-    # Create tables
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS PROFILE (
-        Email TEXT PRIMARY KEY NOT NULL,
-        Password TEXT NOT NULL,
-        FirstName TEXT NOT NULL,
-        LastName TEXT NOT NULL,
-        CardInfo TEXT,
-        BillingAddress TEXT
-    );
-    ''')
+    options = []
+    counter = 0
 
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS CUSTOMER_ORDER (
-        OrderNum TEXT PRIMARY KEY NOT NULL,
-        ShipAdd TEXT NOT NULL,
-        Status TEXT NOT NULL,
-        ProfileEmail TEXT NOT NULL,
-        FOREIGN KEY (ProfileEmail) REFERENCES PROFILE (Email)
-            ON UPDATE CASCADE
-            ON DELETE CASCADE
-    );
-    ''')
+    # For everything in result, print it until it exceeds a character limit
+    for result in results:
+        option = result[0]
+        if option not in options:
+            options.append(option)
 
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS CLOTHING (
-        UniqueNum TEXT PRIMARY KEY NOT NULL,
-        Description TEXT NOT NULL,
-        BroadType TEXT NOT NULL,
-        SpecificType TEXT NOT NULL,
-        Size TEXT NOT NULL,
-        Brand TEXT NOT NULL,
-        Stock INTEGER NOT NULL,
-        Price REAL NOT NULL,
-        GenderF BOOLEAN,
-        GenderM BOOLEAN,
-        GenderY BOOLEAN
-    );
-    ''')
+    return options
 
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS HOLDS (
-        OrderNum TEXT NOT NULL,
-        ClothUniID TEXT NOT NULL,
-        Quantity INTEGER NOT NULL,
-        FOREIGN KEY (OrderNum) REFERENCES CUSTOMER_ORDER (OrderNum)
-            ON UPDATE CASCADE
-            ON DELETE CASCADE,
-        FOREIGN KEY (ClothUniID) REFERENCES CLOTHING (UniqueNum)
-            ON UPDATE CASCADE
-            ON DELETE CASCADE
-    );
-    ''')
+def printOptions(options):
 
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS COLOR (
-        ClothUniID TEXT NOT NULL,
-        Color TEXT NOT NULL,
-        FOREIGN KEY (ClothUniID) REFERENCES CLOTHING (UniqueNum)
-            ON UPDATE CASCADE
-            ON DELETE CASCADE
-    );
-    ''')
+    optionsString = "\n"
+    for option in options:
+        optionsString += option + " | "
 
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS MATERIAL (
-        ClothUniID TEXT NOT NULL,
-        Material TEXT NOT NULL,
-        FOREIGN KEY (ClothUniID) REFERENCES CLOTHING (UniqueNum)
-            ON UPDATE CASCADE
-            ON DELETE CASCADE
-    );
-    ''')
+    return optionsString + "\n"
 
-    # Insert initial data
-    insert_sample_data(cursor)
+def getAnswerInOptions(userMessage, options):
+    # default message to get into the while loop
+    answer = "thismessageiscompletelyinvalidandthereisnothinglikethisinthedatabase"
 
+    # 0 options also represents infinite options
+    if len(options) == 0:
+        return input(userMessage)
+
+    while answer not in options and answer != "":
+        answer = input(userMessage)
+
+    return answer
+
+def addItemToDB(dbName):
+    conn = getConnection(dbName)
+    c = conn.cursor()
+    newItemElements = []
+
+    c.execute("SELECT UniqueNum FROM CLOTHING")
+    results = c.fetchall()
+    if len(results) == 0:
+        newItemElements.append("CL001")
+    else:
+        # Add 1 to the number part after CL00 of the latest ID
+        newItemElements.append("CL00" + str(int(results[len(results) - 1][0][2:]) + 1))
+
+    newItemElements.append(input("What is the description of the item?\t"))
+    newItemElements.append(input("What is the Broad Type of the item?\t"))
+    newItemElements.append(input("What is the Specific Type of the item?\t"))
+    newItemElements.append(input("What is the Size of the item?\t"))
+    newItemElements.append(input("What is the Brand of the item?\t"))
+    try:
+        newItemElements.append(int(input("What is the Stock of the item?\t")))
+    except ValueError:
+        newItemElements.append(0)
+    try:
+        newItemElements.append(float(input("What is the Price of the item?\t")))
+    except ValueError:
+        newItemElements.append(0.0)
+    gender = input("What is the Gender of the item?\t")
+
+    if gender == "F":
+        newItemElements.append(True)
+        newItemElements.append(False)
+        newItemElements.append(False)
+    elif gender == "M":
+        newItemElements.append(False)
+        newItemElements.append(True)
+        newItemElements.append(False)
+    elif gender == "Y":
+        newItemElements.append(False)
+        newItemElements.append(False)
+        newItemElements.append(True)
+    else:
+        newItemElements.append(False)
+        newItemElements.append(False)
+        newItemElements.append(True)
+
+    c.execute("INSERT INTO CLOTHING (UniqueNum, Description, BroadType, SpecificType, Size, Brand, Stock, Price, GenderF, GenderM, GenderY) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", newItemElements)
     conn.commit()
+
+    print("Item added!")
+
+    c.close()
     conn.close()
-    print("Database initialized with tables and sample data.")
-
-def insert_sample_data(cursor):
-    """Inserts initial sample data into the database."""
-    cursor.executemany('''
-    INSERT OR IGNORE INTO PROFILE (Email, Password, FirstName, LastName, CardInfo, BillingAddress)
-    VALUES (?, ?, ?, ?, ?, ?);
-    ''', [
-        ('johnsmith@email.com', 'password1', 'John', 'Smith', '1234567890987654', '123 Elm Street, Las Vegas, NV'),
-        ('johndoe1982@email.com', 'goodP@ssword', 'John', 'Doe', '5468154617467495', '8963 North Rutgers Street, Pittsburgh, PA'),
-        ('janedoe1990@email.com', 'stayOut', 'Jane', 'Doe', '9546174173689857', '8963 North Rutgers Street, Pittsburgh, PA'),
-        ('real-life-fish@email.com', 'water', 'Fish', 'Gill', '9820032489049875', '6423 Ocean Lane, Los Angeles, CA')
-    ])
-
-    cursor.executemany('''
-    INSERT OR IGNORE INTO CUSTOMER_ORDER (OrderNum, ShipAdd, Status, ProfileEmail)
-    VALUES (?, ?, ?, ?);
-    ''', [
-        ('ORDER001', '123 Elm Street, Las Vegas, NV', 'Confirmed', 'johnsmith@email.com'),
-        ('ORDER002', '8963 North Rutgers Street, Pittsburgh, PA', 'Shipped', 'johndoe1982@email.com'),
-        ('ORDER003', '8963 North Rutgers Street, Pittsburgh, PA', 'Delivered', 'janedoe1990@email.com'),
-        ('ORDER004', '6423 Ocean Lane, Los Angeles, CA', 'Shipped', 'real-life-fish@email.com')
-    ])
-
-    cursor.executemany('''
-    INSERT OR IGNORE INTO CLOTHING (UniqueNum, Description, BroadType, SpecificType, Size, Brand, Stock, Price, GenderF, GenderM, GenderY)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-    ''', [
-        ('CL001', 'White Air Forces', 'Shoe', 'Mid-top', '19', 'Nike', 100, 25.00, True, False, False),
-        ('CL002', 'White Air Forces', 'Shoe', 'Mid-top', '10', 'Nike', 100, 25.00, False, True, False),
-        ('CL003', 'White Air Forces', 'Shoe', 'Mid-top', '11', 'Nike', 100, 25.00, False, True, False),
-        ('CL004', 'Black Air Forces', 'Shoe', 'Low-top', '10.5', 'Nike', 100, 25.00, None, True, False),
-        ('CL005', 'Marvin Harrison Jr. Jersey', 'Shirt', 'Jersey', 'XL', 'Nike', 19, 100.00, False, True, False),
-        ('CL006', 'Marvin Harrison Jr. Jersey', 'Shirt', 'Jersey', 'M', 'Nike', 3, 100.00, False, False, True),
-        ('CL007', 'LeBron Witness 8', 'Shoe', 'High-top', '11.5', 'Nike', 25, 110.00, False, True, False),
-        ('CL008', 'LeBron Witness 8', 'Shoe', 'High-top', '12', 'Nike', 30, 110.00, False, True, False),
-        ('CL009', 'LeBron Witness 8', 'Shoe', 'High-top', '13', 'Nike', 50, 110.00, False, True, False),
-        ('CL010', 'LeBron Witness 8', 'Shoe', 'High-top', '6', 'Nike', 45, 110.00, True, False, False),
-        ('CL011', 'LeBron Witness 8', 'Shoe', 'High-top', '7', 'Nike', 15, 110.00, True, False, False),
-        ('CL0012', 'Campus 00s', 'Shoe', 'Low-top', '5', 'Adidas', 40, 110.00, True, False, False),
-        ('CL0013', 'Campus 00s', 'Shoe', 'Low-top', '5.5', 'Adidas', 36, 110.00, True, False, False),
-        ('CL0014', 'Campus 00s', 'Shoe', 'Low-top', '6', 'Adidas', 79, 110.00, True, False, False),
-        ('CL0015', 'Campus 00s', 'Shoe', 'Low-top', '6.5', 'Adidas', 15, 110.00, True, False, False),
-        ('CL0016', 'Campus 00s', 'Shoe', 'Low-top', '6.5', 'Adidas', 45, 110.00, True, False, False),
-        ('CL0017', 'Campus 00s', 'Shoe', 'Low-top', '9', 'Adidas', 76, 110.00, False, True, False),
-        ('CL0018', 'Campus 00s', 'Shoe', 'Low-top', '9.5', 'Adidas', 34, 110.00, False, True, False),
-        ('CL0019', 'Campus 00s', 'Shoe', 'Low-top', '10', 'Adidas', 78, 110.00, False, True, False),
-        ('CL0020', 'Campus 00s', 'Shoe', 'Low-top', '10.5', 'Adidas', 65, 110.00, False, True, False),
-        ('CL0021', 'Campus 00s', 'Shoe', 'Low-top', '11', 'Adidas', 43, 110.00, False, True, False),
-        ('CL0022', 'Campus 00s', 'Shoe', 'Low-top', '5', 'Adidas', 15, 110.00, False, False, True),
-        ('CL0023', 'Campus 00s', 'Shoe', 'Low-top', '5.5', 'Adidas', 56, 110.00, False, False, True),
-        ('CL0024', 'Campus 00s', 'Shoe', 'Low-top', '6', 'Adidas', 43, 110.00, False, False, True),
-        ('CL0025', 'Campus 00s', 'Shoe', 'Low-top', '6.5', 'Adidas', 24, 110.00, False, False, True),
-        ('CL0026', 'Campus 00s', 'Shoe', 'Low-top', '7', 'Adidas', 89, 110.00, False, False, True),
-        ('CL0027', 'Tour Snap back', 'Accessories', 'Golf Hat', 'S', 'Adidas', 24, 32.00, False, False, True),
-        ('CL0028', 'Tour Snap back', 'Accessories', 'Golf Hat', 'M', 'Adidas', 56, 32.00, False, False, True),
-        ('CL0029', 'Tour Snap back', 'Accessories', 'Golf Hat', 'L', 'Adidas', 43, 32.00, False, False, True),
-        ('CL0030', 'Tour Snap back', 'Accessories', 'Golf Hat', 'S', 'Adidas', 56, 32.00, False, True, False),
-        ('CL0031', 'Tour Snap back', 'Accessories', 'Golf Hat', 'M', 'Adidas', 43, 32.00, False, True, False),
-        ('CL0032', 'Tour Snap back', 'Accessories', 'Golf Hat', 'L', 'Adidas', 45, 32.00, False, True, False),
-        ('CL0033', 'Tour Snap back', 'Accessories', 'Golf Hat', 'S', 'Adidas', 78, 32.00, True, False, False),
-        ('CL0034', 'Tour Snap back', 'Accessories', 'Golf Hat', 'M', 'Adidas', 75, 32.00, True, False, False),
-        ('CL0035', 'Tour Snap back', 'Accessories', 'Golf Hat', 'L', 'Adidas', 35, 32.00, True, False, False),
-        ('CL0036', 'Skeleton Trucker Hat', 'Accessories', 'Trucker Hat', 'S', 'Adidas', 35, 26.00, True, False, False),
-        ('CL0037', 'Skeleton Trucker Hat', 'Accessories', 'Trucker Hat', 'M', 'Adidas', 56, 26.00, True, False, False),
-        ('CL0038', 'Skeleton Trucker Hat', 'Accessories', 'Trucker Hat', 'L', 'Adidas', 87, 26.00, True, False, False),
-        ('CL0039', 'Skeleton Trucker Hat', 'Accessories', 'Trucker Hat', 'S', 'Adidas', 43, 26.00, False, True, False),
-        ('CL0040', 'Skeleton Trucker Hat', 'Accessories', 'Trucker Hat', 'M', 'Adidas', 46, 26.00, False, True, False),
-        ('CL0041', 'Skeleton Trucker Hat', 'Accessories', 'Trucker Hat', 'L', 'Adidas', 76, 26.00, False, True, False),
-        ('CL0042', 'Skeleton Trucker Hat', 'Accessories', 'Trucker Hat', 'S', 'Adidas', 56, 26.00, False, False, True),
-        ('CL0043', 'Skeleton Trucker Hat', 'Accessories', 'Trucker Hat', 'M', 'Adidas', 67, 26.00, False, False, True),
-        ('CL0044', 'Skeleton Trucker Hat', 'Accessories', 'Trucker Hat', 'L', 'Adidas', 76, 26.00, False, False, True),
-        ('CL0045', 'Independent Spanning Chest', 'Shirt', 'Graphic Tee', 'S', 'Independent', 35, 28.00, False, True, False),
-        ('CL0046', 'Independent Spanning Chest', 'Shirt', 'Graphic Tee', 'M', 'Independent', 47, 28.00, False, True,False),
-        ('CL0047', 'Independent Spanning Chest', 'Shirt', 'Graphic Tee', 'L', 'Independent', 35, 28.00, False, True,False),
-        ('CL0047', 'Independent Spanning Chest', 'Shirt', 'Graphic Tee', 'XL', 'Independent', 35, 28.00, False, True,False),
-        ('CL0048', 'Independent Spanning Chest', 'Shirt', 'Graphic Tee', 'S', 'Independent', 75, 28.00, True, False, False),
-        ('CL0049', 'Independent Spanning Chest', 'Shirt', 'Graphic Tee', 'M', 'Independent', 43, 28.00, True, False,False),
-        ('CL0050', 'Independent Spanning Chest', 'Shirt', 'Graphic Tee', 'L', 'Independent', 46, 28.00, True, False,False),
-        ('CL0047', 'Independent Spanning Chest', 'Shirt', 'Graphic Tee', 'XL', 'Independent', 35, 28.00, True, False,False),
-        ('CL0051', 'Independent Spanning Chest', 'Shirt', 'Graphic Tee', 'S', 'Independent', 67, 28.00, False, False, True),
-        ('CL0052', 'Independent Spanning Chest', 'Shirt', 'Graphic Tee', 'M', 'Independent', 86, 28.00, False, False,True),
-        ('CL0053', 'Independent Spanning Chest', 'Shirt', 'Graphic Tee', 'L', 'Independent', 32, 28.00, False, False,True),
-        ('CL0047', 'Independent Spanning Chest', 'Shirt', 'Graphic Tee', 'XL', 'Independent', 35, 28.00, False, False,True),
-
-    ])
-
-    cursor.executemany('''
-    INSERT OR IGNORE INTO HOLDS (OrderNum, ClothUniID, Quantity)
-    VALUES (?, ?, ?);
-    ''', [
-        ('ORDER001', 'CL001', 2),
-        ('ORDER002', 'CL002', 1),
-        ('ORDER003', 'CL003', 4),
-        ('ORDER004', 'CL004', 3)
-    ])
-
-    cursor.executemany('''
-    INSERT OR IGNORE INTO COLOR (ClothUniID, Color)
-    VALUES (?, ?);
-    ''', [
-        ('CL001', 'White'),
-        ('CL002', 'Black'),
-        ('CL003', 'Red'),
-        ('CL003', 'Black'),
-        ('CL004', 'White'),
-        ('CL004', 'Red'),
-        ('CL005', 'White'),
-        ('CL005', 'Orange')
-    ])
-
-    cursor.executemany('''
-    INSERT OR IGNORE INTO MATERIAL (ClothUniID, Material)
-    VALUES (?, ?);
-    ''', [
-        ('CL001', 'Rubber'),
-        ('CL002', 'Leather'),
-        ('CL003', 'Polyester'),
-        ('CL004', 'Polyester'),
-        ('CL005', 'Fabric')
-    ])
-
-def print_all_data():
-    """Prints all data from all tables in the database."""
-    conn = connect_db()
-    cursor = conn.cursor()
-
-    tables = ["PROFILE", "CUSTOMER_ORDER", "CLOTHING", "HOLDS", "COLOR", "MATERIAL"]
-
-    for table in tables:
-        print(f"\nContents of {table}:")
-        rows = cursor.execute(f"SELECT * FROM {table};").fetchall()
-        for row in rows:
-            print(row)
-
-    conn.close()
-
-def reset_db():
-    """Drops all tables in the database (useful for testing)."""
-    conn = connect_db()
-    cursor = conn.cursor()
-    tables = ["PROFILE", "CUSTOMER_ORDER", "CLOTHING", "HOLDS", "COLOR", "MATERIAL"]
-    for table in tables:
-        cursor.execute(f"DROP TABLE IF EXISTS {table};")
-    conn.commit()
-    conn.close()
-    print("Database reset complete.")
-
-if __name__ == "__main__":
-    initialize_db()
-    print_all_data()
