@@ -169,6 +169,7 @@ def editItem(itemID, column, newVal, dbName):
     query = f"UPDATE CLOTHING SET {column} = ? WHERE UniqueNum = ?"
     c.execute(query, [newVal, itemID])
     conn.commit()
+    print("Item edited!")
 
     c.close()
     conn.close()
@@ -194,6 +195,8 @@ def addItem(itemID, quantity, orderNum, dbName):
     # Update the stock of the item that was just ordered
     c.execute("UPDATE CLOTHING SET Stock = ? WHERE UniqueNum = ?", [stock - quantity, itemID])
     conn.commit()
+
+    print("Item added to cart!")
 
     c.close()
     conn.close()
@@ -238,3 +241,56 @@ def getAnswerInOptions(userMessage, options):
         answer = input(userMessage)
 
     return answer
+
+def addItemToDB(dbName):
+    conn = getConnection(dbName)
+    c = conn.cursor()
+    newItemElements = []
+
+    c.execute("SELECT UniqueNum FROM CLOTHING")
+    results = c.fetchall()
+    if len(results) == 0:
+        newItemElements.append("CL001")
+    else:
+        # Add 1 to the number part after CL00 of the latest ID
+        newItemElements.append("CL00" + str(int(results[len(results) - 1][0][2:]) + 1))
+
+    newItemElements.append(input("What is the description of the item?\t"))
+    newItemElements.append(input("What is the Broad Type of the item?\t"))
+    newItemElements.append(input("What is the Specific Type of the item?\t"))
+    newItemElements.append(input("What is the Size of the item?\t"))
+    newItemElements.append(input("What is the Brand of the item?\t"))
+    try:
+        newItemElements.append(int(input("What is the Stock of the item?\t")))
+    except ValueError:
+        newItemElements.append(0)
+    try:
+        newItemElements.append(float(input("What is the Price of the item?\t")))
+    except ValueError:
+        newItemElements.append(0.0)
+    gender = input("What is the Gender of the item?\t")
+
+    if gender == "F":
+        newItemElements.append(True)
+        newItemElements.append(False)
+        newItemElements.append(False)
+    elif gender == "M":
+        newItemElements.append(False)
+        newItemElements.append(True)
+        newItemElements.append(False)
+    elif gender == "Y":
+        newItemElements.append(False)
+        newItemElements.append(False)
+        newItemElements.append(True)
+    else:
+        newItemElements.append(False)
+        newItemElements.append(False)
+        newItemElements.append(True)
+
+    c.execute("INSERT INTO CLOTHING (UniqueNum, Description, BroadType, SpecificType, Size, Brand, Stock, Price, GenderF, GenderM, GenderY) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", newItemElements)
+    conn.commit()
+
+    print("Item added!")
+
+    c.close()
+    conn.close()
