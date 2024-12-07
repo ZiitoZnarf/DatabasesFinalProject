@@ -1,5 +1,6 @@
 import sqlite3, dbSearch, orderManager, ProfileManager
 
+from dbSearch import addItemToDB
 
 database = "ClothingStore.db"
 employee_domain = "superclothing.com"
@@ -183,20 +184,23 @@ def employee_options(conn, emp_email):
     logged_out = False
 
     print("\n==Employee Actions==\n")
-    inp_selection = input("Would you like to Search Items (S), View Profile (P), or logout (Q): ")
+    inp_selection = input("Would you like to Search Items (S), Add an Item (A), View Profile (P), or logout (Q): ")
 
     while not logged_out:
         if inp_selection.lower() == 's':
             option_search(conn, emp_email)
-            inp_selection = input("\nWould you like to Search Items (S), View Profile (P), or logout (Q): ")
+            inp_selection = input("\nWould you like to Search Items (S), Add an Item (A), View Profile (P), or logout (Q): ")
         elif inp_selection.lower() == 'p':
             option_profile(conn, emp_email)
-            inp_selection = input("\nWould you like to Search Items (S), View Profile (P), or logout (Q): ")
+            inp_selection = input("\nWould you like to Search Items (S), Add an Item (A), View Profile (P), or logout (Q): ")
+        elif inp_selection.lower() == 'a':
+            addItemToDB(database)
+            inp_selection = input("\nWould you like to Search Items (S), Add an Item (A), View Profile (P), or logout (Q): ")
         elif inp_selection.lower() == 'q':
             logged_out = True
         else:
             print ("Selection not Recognized, please enter one of the following options:")
-            inp_selection = input("Search Items (S), View Profile (P), or logout (Q): ")
+            inp_selection = input("Search Items (S), Add an Item (A), View Profile (P), or logout (Q): ")
 
 
 def option_search(conn, email):
