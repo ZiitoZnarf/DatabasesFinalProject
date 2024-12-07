@@ -253,7 +253,8 @@ def addItemToDB(dbName):
         newItemElements.append("CL001")
     else:
         # Add 1 to the number part after CL00 of the latest ID
-        newItemElements.append("CL00" + str(int(results[len(results) - 1][0][2:]) + 1))
+        #newItemElements.append("CL00" + str(int(results[len(results) - 1][0][2:]) + 1))
+        newItemElements.append("CL00" + str(len(results) + 1))
 
     newItemElements.append(input("What is the description of the item?\t"))
     newItemElements.append(input("What is the Broad Type of the item?\t"))
